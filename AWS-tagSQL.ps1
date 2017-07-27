@@ -97,10 +97,9 @@ $tag.Key = "SQL"
                $instanceAMI = $instance.ImageId #current Instance Image AMI
                $instanceName =  $instance.Tags | ? { $_.key -eq "Name" } | select -expand Value; #gets the name of the current instance
              
-               $instanceNameSub = $instanceName.Substring(0,8);
+               $instanceNameSub = $instanceName.Substring(0,8);#this may not be required for you this is the name on aws we take only the first 8 characters
                $version = getSQLVersion($instanceNameSub);
 
-               #elseif here maybe
 
                   #if instance is in array then add tag
                   if($instanceIDArr.InstanceID.contains($instanceID)) {
@@ -130,10 +129,6 @@ $tag.Key = "SQL"
                      #Add to csv output file
                      write-output "InstanceID :  $instanceID | Region : $region | Name :$instanceName | Tags Added: $Edition - $License" | add-content  C:\scripts\Results\awsTagging.txt
                   } else {
-
-
-                        #check to see if $version has a value set if it here or change overal if to else if
-
 
                     #write-host "No Instances Match for $region";
                     write-output "InstanceID :  $instanceID | Region : $region | Name :$instanceName | Not an SQL Instance" | add-content  C:\scripts\Results\awsTagging.txt
