@@ -65,7 +65,7 @@
 
 
 
-Initialize-AWSDefaults -ProfileName "Jason.Stewart" -Region "eu-west-1" #users profile details for aws connect
+Initialize-AWSDefaults -ProfileName "ProfileName" -Region "eu-west-1" #users profile details for aws connect
 
 
 $tag = New-Object Amazon.EC2.Model.Tag
