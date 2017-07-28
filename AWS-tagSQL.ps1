@@ -51,22 +51,23 @@
  
                             # Output value for Tag
                             $out =  $versionname + " - " + $edition ; #eg SQL Server 2016 - Express Edition
-                            write-host $out
+                            
                         return $out;
                         }
  
-               } catch { $out = $server + ",Could not open registry";  }       
+               } catch { $out = $server +",Could not open registry";  }       
  
      } else {
-        $out = $server + ",Not online"
+        $out = $server +",Not online"
         }
 
   return $out;
  }
 
 
+$profileName = "YourProfileName"
 
-Initialize-AWSDefaults -ProfileName "profilename" -Region "region" #users profile details for aws connect
+Initialize-AWSDefaults -ProfileName $profileName -Region "eu-west-1" #users profile details for aws connect
 #get instances that need new tags ( CSV File or manually enter one )
 
 $instanceIDArr =  import-csv -Path "c:\scripts\instanceIDS.csv"  -header("InstanceID") #headers are InstanceID
@@ -86,7 +87,7 @@ $tag.Key = "SQL"
        #loop through the regions
         foreach($region in $regionStore) {
 
-        Initialize-AWSDefaults -ProfileName "profilename" -Region $region.region; #users profile details for aws connect needed for the loop each region
+        Initialize-AWSDefaults -ProfileName $profileName -Region $region.region; #users profile details for aws connect needed for the loop each region
         #get array of all the instances in this region
         $instanceArray = Get-EC2Instance -Region $region.region
 
@@ -96,42 +97,60 @@ $tag.Key = "SQL"
                $instanceID = $instance.InstanceId #current instance ID
                $instanceAMI = $instance.ImageId #current Instance Image AMI
                $instanceName =  $instance.Tags | ? { $_.key -eq "Name" } | select -expand Value; #gets the name of the current instance
-             
-               $instanceNameSub = $instanceName.Substring(0,8);#this may not be required for you this is the name on aws we take only the first 8 characters
+               $varfound = "false";
+               
+               $instanceNameSub = $instanceName.Substring(0,8); #this may not be required for you this is the name on aws we take only the first 8 characters
+
                $version = getSQLVersion($instanceNameSub);
+               
+               $searched = "";
 
+              
+               if($version -ne "$instanceNameSub,Could not open registry" -and $version -ne "$instanceNameSub,Not online") {
+                   $varfound = "true"; 
+                   $searched = "This Searched the server and found its value here"
 
-                  #if instance is in array then add tag
-                  if($instanceIDArr.InstanceID.contains($instanceID)) {
+                 } elseif($instanceIDArr.InstanceID.contains($instanceID)) {
                     #get arrayvalue of what this contains
-
-
-                    $indexVal = [array]::IndexOf($instanceDescriptionsArr.name, $instanceNameSub)# get the position within the array to be used
+                        $indexVal = [array]::IndexOf($instanceDescriptionsArr.name, $instanceNameSub)# get the position within the array to be used
 
                        write-host "name : $instanceName - ID : $instanceID - AMI : $instanceAMI - Postion in array : $indexVal";
 
-                     if($indexVal -ne "-1"){
-                        $Edition = $instanceDescriptionsArr[$indexVal].Edition; #get the edition details
-                        $License = $instanceDescriptionsArr[$indexVal].License; #get the license details
-                     } else {
-                        $Edition = "";
-                        $License = "Not Found in list";
-                        }
+                         if($indexVal -ne "-1"){
+                            $Edition = $instanceDescriptionsArr[$indexVal].Edition; #get the edition details
+                            $License = $instanceDescriptionsArr[$indexVal].License; #get the license details 
+                            $version = "$Edition - $License"
+                            $varfound = "true";
 
-                     $tag.Value = "$Edition - $License" #Set the Value
-                     
-                     if($edition -ne ""){
-                       #add tag to the instance
-                       #New-EC2Tag -Resource $instanceID -Tag $tag
-                       write-host "TAG | $version"
-                      }
+                            $searched = "Take From csv";
 
-                     #Add to csv output file
-                     write-output "InstanceID :  $instanceID | Region : $region | Name :$instanceName | Tags Added: $Edition - $License" | add-content  C:\scripts\Results\awsTagging.txt
+                         } else {
+                            $reason = "SQL Version not found";
+                            $searched =$reason;
+                            }
+
+                    
                   } else {
 
                     #write-host "No Instances Match for $region";
-                    write-output "InstanceID :  $instanceID | Region : $region | Name :$instanceName | Not an SQL Instance" | add-content  C:\scripts\Results\awsTagging.txt
+                        $reason = "Not Identified as SQL"
+                        $varfound = "false";
                     }
+
+                    
+                  if ($varfound -ne "false") {
+
+                       #add tag to the instance
+
+                       $tag.Value = $version #Set the Value
+                        New-EC2Tag -Resource $instanceID -Tag $tag
+                        write-output "InstanceID :  $instanceID | Region : $region | Name :$instanceName | Tags Added: $version"
+                        write-host "TAG | $version | $searched"
+                        #Add to csv output file
+                        write-output "InstanceID :  $instanceID | Region : $region | Name :$instanceName | Tags Added: $version" | add-content  C:\scripts\Results\awsTagging.txt
+
+                    } else {
+                             write-output "InstanceID :  $instanceID | Region : $region | Name :$instanceName |  $reason" | add-content  C:\scripts\Results\awsTagging.txt
+                       }
              }
         }
