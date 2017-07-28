@@ -25,4 +25,11 @@ Function IntitialzeRegion($ProfileName,$Region) {
 
 
 
+#Assign a new Tag
 
+Function TagInstance($instanceID,$tag) {
+	
+    New-EC2Tag -Resource $instanceID -Tag $tag
+
+}
+#TagInstance($instanceID,$key,$keyVal)
