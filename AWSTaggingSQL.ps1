@@ -67,17 +67,10 @@
 
 $profileName = "YourProfileName"
 
-Initialize-AWSDefaults -ProfileName $profileName -Region "eu-west-1" #users profile details for aws connect
-#get instances that need new tags ( CSV File or manually enter one )
 
+#get instances that need new tags ( CSV File or manually enter one )
 $instanceIDArr =  import-csv -Path "c:\scripts\instanceIDS.csv"  -header("InstanceID") #headers are InstanceID
 $instanceDescriptionsArr =  import-csv -Path "c:\scripts\awsNames.csv" -header("name","edition","license") #headers are name,edition,license
-
-<<<<<<< HEAD:AWSTaggingSQL.ps1
-=======
-Initialize-AWSDefaults -ProfileName "ProfileName" -Region "eu-west-1" #users profile details for aws connect
->>>>>>> f1e2f119b7cc70ae5c82a37baac2cc4fa3722bc2:AWS-tagSQL.ps1
-
 $instanceArrayName = $instanceIDArr.AssetName;
 
 $tag = New-Object Amazon.EC2.Model.Tag
