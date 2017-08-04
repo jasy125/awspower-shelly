@@ -7,7 +7,7 @@ Function CreateAWSProfile($AccessKey,$SecretKey,$ProfileName) {
     Set-AWSCredentials -AccessKey $AccessKey -SecretKey $SecretKey -StoreAs $ProfileName
 
 }
-#CreateAWSProfile("ouraccesskey","oursecureKey","MyProfile"); #Use this to call the function if included
+#CreateAWSProfile("ouraccesskey","oursecureKey","MyProfile"); #Use this to call the function to create your aws profile connection file
 
 
 
